@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-from qutip import Qobj
+from qutip import Qobj, basis, sigmax, tensor
 from bipartit_open_spin.core.states import (
     bell_phi_plus,
     computational_basis,
@@ -51,6 +51,33 @@ class TestStates(unittest.TestCase):
         self.assertEqual(dm.dims, [[2, 2], [2, 2]])
         self.assertAlmostEqual(dm.tr(), 1.0)
 
+    def test_to_density_matrix_flat_dims_relabeling(self):
+        # Shape (4, 4) with flat dims [[4], [4]]
+        raw_4x4 = np.eye(4) / 4.0
+        qobj_flat = Qobj(raw_4x4, dims=[[4], [4]])
+        dm = to_density_matrix(qobj_flat)
+        self.assertEqual(dm.shape, (4, 4))
+        self.assertEqual(dm.dims, [[2, 2], [2, 2]])
+
+    def test_to_density_matrix_incompatible_dimensions_raise(self):
+        # 1-qubit ket
+        with self.assertRaises(ValueError):
+            to_density_matrix(basis(2, 0))
+
+        # 1-qubit operator
+        with self.assertRaises(ValueError):
+            to_density_matrix(sigmax())
+
+        # 3-qubit ket
+        psi_3qubit = tensor(basis(2, 0), basis(2, 0), basis(2, 0))
+        with self.assertRaises(ValueError):
+            to_density_matrix(psi_3qubit)
+
+        # Bra vector (not ket, not oper)
+        with self.assertRaises(ValueError):
+            to_density_matrix(bell_phi_plus().dag())
+
 
 if __name__ == "__main__":
     unittest.main()
+

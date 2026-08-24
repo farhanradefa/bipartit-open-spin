@@ -38,6 +38,7 @@ class TestValidation(unittest.TestCase):
         raw[0, 1] += 0.5  # Break Hermiticity
         rho_non_hermitian = Qobj(raw, dims=[[2, 2], [2, 2]])
         self.assertFalse(check_hermiticity(rho_non_hermitian))
+        self.assertFalse(check_positivity(rho_non_hermitian))
         self.assertFalse(validate_density_matrix(rho_non_hermitian)["valid"])
 
     def test_negative_eigenvalues_detected(self):
@@ -47,7 +48,57 @@ class TestValidation(unittest.TestCase):
         self.assertFalse(check_positivity(rho_indefinite))
         self.assertFalse(validate_density_matrix(rho_indefinite)["valid"])
 
+    def test_positivity_numerical_tolerance_boundary(self):
+        # Matrix with small negative eigenvalue within tolerance
+        raw = np.diag([1.0 + 1e-8, 0.0, 0.0, -1e-8])
+        rho_near_positive = Qobj(raw, dims=[[2, 2], [2, 2]])
+        self.assertTrue(check_positivity(rho_near_positive, tol=1e-6))
+        self.assertFalse(check_positivity(rho_near_positive, tol=1e-10))
+
+    def test_diagnostics_reject_negative_tolerance(self):
+        rho = to_density_matrix(bell_phi_plus())
+        with self.assertRaises(ValueError):
+            check_trace_preservation(rho, tol=-1e-6)
+        with self.assertRaises(ValueError):
+            check_hermiticity(rho, tol=-1e-6)
+        with self.assertRaises(ValueError):
+            check_positivity(rho, tol=-1e-6)
+        with self.assertRaises(ValueError):
+            validate_density_matrix(rho, tol=-1e-6)
+        with self.assertRaises(ValueError):
+            validate_state_trajectory([rho], tol=-1e-6)
+
+    def test_empty_trajectory_validation(self):
+        traj_val = validate_state_trajectory([])
+        self.assertFalse(traj_val["valid"])
+        self.assertFalse(traj_val["trace_preservation"])
+        self.assertFalse(traj_val["hermiticity"])
+        self.assertFalse(traj_val["positivity"])
+
+    def test_verify_excited_population_decay_validation(self):
+        tlist = np.linspace(0, 10, 50)
+        p_excited = np.exp(-0.2 * tlist)
+
+        # Valid input passes
+        self.assertTrue(verify_excited_population_decay(gamma=0.2, tlist=tlist, p_excited=p_excited, tol=1e-3))
+
+        # Negative gamma raises ValueError
+        with self.assertRaises(ValueError):
+            verify_excited_population_decay(gamma=-0.1, tlist=tlist, p_excited=p_excited)
+
+        # Negative tol raises ValueError
+        with self.assertRaises(ValueError):
+            verify_excited_population_decay(gamma=0.2, tlist=tlist, p_excited=p_excited, tol=-1e-3)
+
+        # Length mismatch raises ValueError
+        with self.assertRaises(ValueError):
+            verify_excited_population_decay(gamma=0.2, tlist=tlist, p_excited=p_excited[:-1])
+
+        # Empty arrays return False
+        self.assertFalse(verify_excited_population_decay(gamma=0.2, tlist=np.array([]), p_excited=np.array([])))
+
     def test_open_system_simulation_and_trajectory_validation(self):
+
         params = ModelParams(omega=1.0, J=0.5, gamma=0.1)
         config = SimulationConfig(tlist=np.linspace(0, 5, 50))
 

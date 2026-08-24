@@ -36,6 +36,9 @@ def to_density_matrix(state: Qobj) -> Qobj:
 
     Returns:
         Qobj density matrix with dims [[2, 2], [2, 2]].
+
+    Raises:
+        ValueError: If state is not a ket or operator, or if dimensions are incompatible with shape (4, 4).
     """
     if state.isket:
         dm = ket2dm(state)
@@ -44,7 +47,13 @@ def to_density_matrix(state: Qobj) -> Qobj:
     else:
         raise ValueError(f"Expected ket or density matrix operator, got type {state.type}")
 
+    if dm.shape != (4, 4):
+        raise ValueError(
+            f"Incompatible Hilbert-space dimensions: expected matrix shape (4, 4), got shape {dm.shape}"
+        )
+
     if dm.dims != [[2, 2], [2, 2]]:
         # Enforce bipartite subsystem dimensions
         dm = Qobj(dm.full(), dims=[[2, 2], [2, 2]])
     return dm
+
