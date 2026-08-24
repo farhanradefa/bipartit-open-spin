@@ -16,13 +16,20 @@ from bipartit_open_spin.core.operators import (
     sigma_z2,
 )
 from bipartit_open_spin.dynamics.hamiltonian import build_hamiltonian
-from bipartit_open_spin.dynamics.dissipation import build_collapse_operators
+from bipartit_open_spin.dynamics.dissipation import (
+    build_collapse_operators,
+    build_dephasing_collapse_operators,
+    dissipative_jump_rates,
+    liouvillian_action,
+    liouvillian_superoperator_decomposition,
+)
 from bipartit_open_spin.dynamics.simulation import simulate_dynamics
 from bipartit_open_spin.analysis.entanglement import (
     concurrence,
     concurrence_trajectory,
     negativity,
     negativity_trajectory,
+    x_state_concurrence_decomposition,
 )
 from bipartit_open_spin.validation.diagnostics import (
     check_hermiticity,
@@ -53,11 +60,16 @@ __all__ = [
     "sigma_m2",
     "build_hamiltonian",
     "build_collapse_operators",
+    "build_dephasing_collapse_operators",
+    "liouvillian_action",
+    "liouvillian_superoperator_decomposition",
+    "dissipative_jump_rates",
     "simulate_dynamics",
     "concurrence",
     "negativity",
     "concurrence_trajectory",
     "negativity_trajectory",
+    "x_state_concurrence_decomposition",
     "check_trace_preservation",
     "check_hermiticity",
     "check_positivity",

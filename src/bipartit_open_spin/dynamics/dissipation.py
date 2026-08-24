@@ -55,3 +55,99 @@ def build_dephasing_collapse_operators(gamma_phi: float) -> list[Qobj]:
     ]
     return c_ops
 
+
+def liouvillian_action(H: Qobj, c_ops: list[Qobj], rho: Qobj) -> Qobj:
+    """Evaluate the action of the Lindblad generator on a density matrix rho: L(rho).
+
+    L(rho) = -i [H, rho] + sum_k (C_k rho C_k^dagger - 1/2 {C_k^dagger C_k, rho})
+
+    Args:
+        H: Hamiltonian Qobj (or None/zero operator).
+        c_ops: List of collapse operators Qobj.
+        rho: Density matrix Qobj.
+
+    Returns:
+        Qobj representing d rho / dt with dims [[2, 2], [2, 2]].
+    """
+    from bipartit_open_spin.core.states import to_density_matrix
+
+    dm = to_density_matrix(rho)
+
+    if H is not None and H.norm() > 0:
+        comm = -1j * (H * dm - dm * H)
+    else:
+        comm = Qobj(np.zeros((4, 4), dtype=complex), dims=[[2, 2], [2, 2]])
+
+    diss = Qobj(np.zeros((4, 4), dtype=complex), dims=[[2, 2], [2, 2]])
+    for c in c_ops:
+        cdc = c.dag() * c
+        diss += c * dm * c.dag() - 0.5 * (cdc * dm + dm * cdc)
+
+    return comm + diss
+
+
+def liouvillian_superoperator_decomposition(
+    H: Qobj,
+    c_ops_amp: list[Qobj],
+    c_ops_phi: list[Qobj],
+    rho: Qobj,
+) -> dict[str, Qobj]:
+    """Decompose d rho / dt into Hamiltonian, amplitude damping, and pure dephasing contributions.
+
+    d rho / dt = L_H(rho) + L_amp(rho) + L_phi(rho)
+
+    Args:
+        H: Hamiltonian Qobj.
+        c_ops_amp: List of amplitude damping collapse operators.
+        c_ops_phi: List of pure dephasing collapse operators.
+        rho: Density matrix Qobj.
+
+    Returns:
+        dict with keys 'L_H', 'L_amp', 'L_phi', 'L_tot'.
+    """
+    from bipartit_open_spin.core.states import to_density_matrix
+
+    dm = to_density_matrix(rho)
+
+    L_H = -1j * (H * dm - dm * H) if H is not None else Qobj(np.zeros((4, 4), dtype=complex), dims=[[2, 2], [2, 2]])
+
+    L_amp = Qobj(np.zeros((4, 4), dtype=complex), dims=[[2, 2], [2, 2]])
+    for c in c_ops_amp:
+        cdc = c.dag() * c
+        L_amp += c * dm * c.dag() - 0.5 * (cdc * dm + dm * cdc)
+
+    L_phi = Qobj(np.zeros((4, 4), dtype=complex), dims=[[2, 2], [2, 2]])
+    for c in c_ops_phi:
+        cdc = c.dag() * c
+        L_phi += c * dm * c.dag() - 0.5 * (cdc * dm + dm * cdc)
+
+    L_tot = L_H + L_amp + L_phi
+
+    return {
+        "L_H": L_H,
+        "L_amp": L_amp,
+        "L_phi": L_phi,
+        "L_tot": L_tot,
+    }
+
+
+def dissipative_jump_rates(c_ops: list[Qobj], rho: Qobj) -> list[float]:
+    """Compute the expectation values of dissipative jump rates R_k = Tr[C_k^dagger C_k rho].
+
+    Args:
+        c_ops: List of collapse operators Qobj.
+        rho: Density matrix Qobj.
+
+    Returns:
+        List of float jump rates R_k.
+    """
+    from bipartit_open_spin.core.states import to_density_matrix
+
+    dm = to_density_matrix(rho)
+    rates = []
+    for c in c_ops:
+        cdc = c.dag() * c
+        r_val = float(np.real((cdc * dm).tr()))
+        rates.append(r_val)
+    return rates
+

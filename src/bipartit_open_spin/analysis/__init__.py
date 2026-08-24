@@ -5,6 +5,7 @@ from bipartit_open_spin.analysis.entanglement import (
     concurrence_trajectory,
     negativity,
     negativity_trajectory,
+    x_state_concurrence_decomposition,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "negativity",
     "concurrence_trajectory",
     "negativity_trajectory",
+    "x_state_concurrence_decomposition",
 ]
