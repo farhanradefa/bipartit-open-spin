@@ -1,2 +1,68 @@
+"""Bipartite Open Spin System: Dissipative Entanglement Dynamics."""
+
+from bipartit_open_spin.config import ModelParams, SimulationConfig
+from bipartit_open_spin.core.states import (
+    bell_phi_plus,
+    computational_basis,
+    to_density_matrix,
+)
+from bipartit_open_spin.core.operators import (
+    identity_2qubit,
+    sigma_m1,
+    sigma_m2,
+    sigma_x1,
+    sigma_x2,
+    sigma_z1,
+    sigma_z2,
+)
+from bipartit_open_spin.dynamics.hamiltonian import build_hamiltonian
+from bipartit_open_spin.dynamics.dissipation import build_collapse_operators
+from bipartit_open_spin.dynamics.simulation import simulate_dynamics
+from bipartit_open_spin.analysis.entanglement import (
+    concurrence,
+    concurrence_trajectory,
+    negativity,
+    negativity_trajectory,
+)
+from bipartit_open_spin.validation.diagnostics import (
+    check_hermiticity,
+    check_positivity,
+    check_trace_preservation,
+    validate_density_matrix,
+    validate_state_trajectory,
+    verify_excited_population_decay,
+)
+
+
 def main() -> None:
-    print("Hello from bipartit-open-spin!")
+    print("Bipartite Open Spin System: Baseline Module Initialized.")
+
+
+__all__ = [
+    "ModelParams",
+    "SimulationConfig",
+    "computational_basis",
+    "bell_phi_plus",
+    "to_density_matrix",
+    "identity_2qubit",
+    "sigma_x1",
+    "sigma_x2",
+    "sigma_z1",
+    "sigma_z2",
+    "sigma_m1",
+    "sigma_m2",
+    "build_hamiltonian",
+    "build_collapse_operators",
+    "simulate_dynamics",
+    "concurrence",
+    "negativity",
+    "concurrence_trajectory",
+    "negativity_trajectory",
+    "check_trace_preservation",
+    "check_hermiticity",
+    "check_positivity",
+    "validate_density_matrix",
+    "validate_state_trajectory",
+    "verify_excited_population_decay",
+    "main",
+]
