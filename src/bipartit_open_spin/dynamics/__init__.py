@@ -15,6 +15,7 @@ from bipartit_open_spin.dynamics.simulation import (
     simulate_dynamics,
     simulate_no_jump_dynamics,
     simulate_quantum_trajectories,
+    simulate_timedependent_nonhermitian,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "simulate_dynamics",
     "simulate_no_jump_dynamics",
     "simulate_quantum_trajectories",
+    "simulate_timedependent_nonhermitian",
 ]

@@ -15,6 +15,7 @@ from bipartit_open_spin.analysis.spectrum import (
     detect_exceptional_point,
     parity_block_decomposition,
     track_eigenpairs_along_loop,
+    track_instantaneous_eigenpairs,
 )
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     "build_topological_odd_hamiltonian",
     "compute_biorthogonal_eigenpairs",
     "track_eigenpairs_along_loop",
+    "track_instantaneous_eigenpairs",
 ]

@@ -30,6 +30,7 @@ from bipartit_open_spin.dynamics.simulation import (
     simulate_dynamics,
     simulate_no_jump_dynamics,
     simulate_quantum_trajectories,
+    simulate_timedependent_nonhermitian,
 )
 from bipartit_open_spin.analysis.entanglement import (
     concurrence,
@@ -46,6 +47,7 @@ from bipartit_open_spin.analysis.spectrum import (
     detect_exceptional_point,
     parity_block_decomposition,
     track_eigenpairs_along_loop,
+    track_instantaneous_eigenpairs,
 )
 from bipartit_open_spin.validation.diagnostics import (
     check_hermiticity,
@@ -84,6 +86,7 @@ __all__ = [
     "simulate_dynamics",
     "simulate_no_jump_dynamics",
     "simulate_quantum_trajectories",
+    "simulate_timedependent_nonhermitian",
     "concurrence",
     "negativity",
     "concurrence_trajectory",
@@ -96,6 +99,7 @@ __all__ = [
     "build_topological_odd_hamiltonian",
     "compute_biorthogonal_eigenpairs",
     "track_eigenpairs_along_loop",
+    "track_instantaneous_eigenpairs",
     "check_trace_preservation",
     "check_hermiticity",
     "check_positivity",

@@ -1,5 +1,6 @@
 """Simulation engine wrapping QuTiP master equation solver."""
 
+import numpy as np
 from qutip import Qobj, mesolve
 from bipartit_open_spin.config import SimulationConfig
 from bipartit_open_spin.core.states import to_density_matrix
@@ -161,3 +162,94 @@ def simulate_quantum_trajectories(
         **kwargs,
     )
     return result
+
+
+def simulate_timedependent_nonhermitian(
+    H_func,
+    psi0: np.ndarray,
+    tlist: np.ndarray,
+    rtol: float = 1e-10,
+    atol: float = 1e-12,
+) -> dict:
+    """Solve the time-dependent non-Hermitian Schrödinger equation:
+
+    d psi / dt = -i H(t) psi(t)
+
+    Computes both unnormalized conditional states |psi(t)> and normalized
+    states |psi_tilde(t)>, as well as survival probabilities and subspace populations.
+
+    Args:
+        H_func: Callable t -> 2x2 complex ndarray.
+        psi0: 1D complex ndarray of shape (2,) representing initial state.
+        tlist: 1D ndarray of time points.
+        rtol: Relative error tolerance for ODE solver.
+        atol: Absolute error tolerance for ODE solver.
+
+    Returns:
+        dict containing:
+            'tlist': 1D float ndarray
+            'raw_states': (len(tlist), 2) complex ndarray
+            'normalized_states': (len(tlist), 2) complex ndarray
+            'survival_probability': 1D float ndarray of <psi(t)|psi(t)>
+            'p01': 1D float ndarray of |<01|psi_tilde(t)>|^2
+            'p10': 1D float ndarray of |<10|psi_tilde(t)>|^2
+    """
+    from scipy.integrate import solve_ivp
+
+    psi0_vec = np.asarray(psi0, dtype=complex).flatten()
+    if len(psi0_vec) != 2:
+        raise ValueError(f"psi0 must be a 2-element state vector, got length {len(psi0_vec)}")
+
+    # Ensure initial vector is normalized
+    norm_0 = np.linalg.norm(psi0_vec)
+    if norm_0 > 1e-15:
+        psi0_vec = psi0_vec / norm_0
+
+    def rhs(t, y):
+        H_t = H_func(t)
+        return -1j * (H_t @ y)
+
+    sol = solve_ivp(
+        rhs,
+        (tlist[0], tlist[-1]),
+        psi0_vec,
+        t_eval=tlist,
+        method="DOP853",
+        rtol=rtol,
+        atol=atol,
+    )
+
+    if not sol.success:
+        raise RuntimeError(f"ODE integration failed: {sol.message}")
+
+    # sol.y has shape (2, len(tlist))
+    raw_states = sol.y.T  # (len(tlist), 2)
+    n_t = len(tlist)
+
+    survival_prob = np.zeros(n_t, dtype=float)
+    normalized_states = np.zeros((n_t, 2), dtype=complex)
+    p01 = np.zeros(n_t, dtype=float)
+    p10 = np.zeros(n_t, dtype=float)
+
+    for idx in range(n_t):
+        vec = raw_states[idx, :]
+        norm_sq = float(np.real(np.vdot(vec, vec)))
+        survival_prob[idx] = norm_sq
+
+        if norm_sq > 1e-30:
+            vec_norm = vec / np.sqrt(norm_sq)
+        else:
+            vec_norm = vec
+
+        normalized_states[idx, :] = vec_norm
+        p01[idx] = float(np.abs(vec_norm[0]) ** 2)
+        p10[idx] = float(np.abs(vec_norm[1]) ** 2)
+
+    return {
+        "tlist": tlist,
+        "raw_states": raw_states,
+        "normalized_states": normalized_states,
+        "survival_probability": survival_prob,
+        "p01": p01,
+        "p10": p10,
+    }

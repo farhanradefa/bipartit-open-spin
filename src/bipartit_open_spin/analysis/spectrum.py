@@ -382,3 +382,37 @@ def track_eigenpairs_along_loop(
         "permutation_error_1_loop": float(d_swap),
         "return_error_2_loop": return_err_2_loop,
     }
+
+
+def track_instantaneous_eigenpairs(
+    H_func,
+    tlist: np.ndarray,
+) -> dict:
+    """Track instantaneous eigenvalues and normalized eigenvectors along a time-dependent trajectory.
+
+    Args:
+        H_func: Callable t -> 2x2 complex ndarray.
+        tlist: 1D ndarray of time points.
+
+    Returns:
+        dict containing:
+            'tlist': 1D ndarray of times
+            'eigenvalues': (len(tlist), 2) complex ndarray of tracked instantaneous eigenvalues
+            'eigenvectors': (len(tlist), 2, 2) complex ndarray of tracked normalized eigenvectors
+            'gaps': 1D float array of |lambda_+(t) - lambda_-(t)|
+            'min_gap': float
+    """
+    res = track_eigenpairs_along_loop(H_func, tlist)
+    evals = res["eigenvalues"]
+    evecs = res["eigenvectors"]
+
+    gaps = np.array([float(np.abs(evals[k, 0] - evals[k, 1])) for k in range(len(tlist))])
+    min_gap = float(np.min(gaps))
+
+    return {
+        "tlist": tlist,
+        "eigenvalues": evals,
+        "eigenvectors": evecs,
+        "gaps": gaps,
+        "min_gap": min_gap,
+    }
