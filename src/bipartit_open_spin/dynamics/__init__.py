@@ -7,15 +7,25 @@ from bipartit_open_spin.dynamics.dissipation import (
     liouvillian_action,
     liouvillian_superoperator_decomposition,
 )
-from bipartit_open_spin.dynamics.hamiltonian import build_hamiltonian
-from bipartit_open_spin.dynamics.simulation import simulate_dynamics
+from bipartit_open_spin.dynamics.hamiltonian import (
+    build_effective_hamiltonian,
+    build_hamiltonian,
+)
+from bipartit_open_spin.dynamics.simulation import (
+    simulate_dynamics,
+    simulate_no_jump_dynamics,
+    simulate_quantum_trajectories,
+)
 
 __all__ = [
     "build_hamiltonian",
+    "build_effective_hamiltonian",
     "build_collapse_operators",
     "build_dephasing_collapse_operators",
     "liouvillian_action",
     "liouvillian_superoperator_decomposition",
     "dissipative_jump_rates",
     "simulate_dynamics",
+    "simulate_no_jump_dynamics",
+    "simulate_quantum_trajectories",
 ]
