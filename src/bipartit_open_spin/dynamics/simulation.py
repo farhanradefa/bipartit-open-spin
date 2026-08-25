@@ -253,3 +253,136 @@ def simulate_timedependent_nonhermitian(
         "p01": p01,
         "p10": p10,
     }
+
+
+def simulate_timedependent_lindblad(
+    H_func,
+    c_ops_func,
+    rho0,
+    tlist: np.ndarray,
+    rtol: float = 1e-8,
+    atol: float = 1e-10,
+) -> dict:
+    """Solve the full time-dependent Lindblad master equation for a 2-qubit system (4x4 density matrix):
+
+    d rho / dt = -i [H(t), rho] + sum_k ( L_k(t) rho L_k(t)^dagger - 0.5 * {L_k(t)^dagger L_k(t), rho} )
+
+    Args:
+        H_func: Callable t -> 4x4 complex ndarray or Qobj.
+        c_ops_func: Callable t -> list of 4x4 complex ndarrays or Qobjs.
+        rho0: Initial density matrix or ket (Qobj or 4x4 / (4,) ndarray).
+        tlist: 1D float ndarray of time points.
+        rtol: Relative error tolerance for ODE solver.
+        atol: Absolute error tolerance for ODE solver.
+
+    Returns:
+        dict containing:
+            'tlist': 1D float ndarray
+            'states': list of Qobj density matrices of dimensions [[2, 2], [2, 2]]
+            'p00': 1D float ndarray of <00|rho(t)|00>
+            'p01': 1D float ndarray of <01|rho(t)|01>
+            'p10': 1D float ndarray of <10|rho(t)|10>
+            'p11': 1D float ndarray of <11|rho(t)|11>
+            's_odd': 1D float ndarray of P_01(t) + P_10(t)
+            'coherence_01_10': 1D complex ndarray of rho_{01,10}(t)
+            'abs_coherence': 1D float ndarray of |rho_{01,10}(t)|
+            'imbalance_z': 1D float ndarray of (P01 - P10) / (P01 + P10)
+    """
+    from scipy.integrate import solve_ivp
+    from bipartit_open_spin.core.states import to_density_matrix
+
+    # Convert initial state to 4x4 density matrix ndarray
+    if isinstance(rho0, Qobj):
+        rho0_mat = to_density_matrix(rho0).full()
+    else:
+        rho0_arr = np.asarray(rho0, dtype=complex)
+        if rho0_arr.ndim == 1:
+            rho0_arr = rho0_arr / np.linalg.norm(rho0_arr)
+            rho0_mat = np.outer(rho0_arr, np.conj(rho0_arr))
+        else:
+            rho0_mat = rho0_arr
+
+    y0 = rho0_mat.flatten()
+
+    def rhs(t, y):
+        rho_t = y.reshape((4, 4))
+        H_raw = H_func(t)
+        H_t = H_raw.full() if isinstance(H_raw, Qobj) else np.asarray(H_raw, dtype=complex)
+
+        c_ops_raw = c_ops_func(t)
+        c_ops_t = [
+            op.full() if isinstance(op, Qobj) else np.asarray(op, dtype=complex)
+            for op in c_ops_raw
+        ]
+
+        # Commutator -i [H, rho]
+        drho = -1j * (H_t @ rho_t - rho_t @ H_t)
+
+        # Dissipators sum_k ( L rho L^dagger - 0.5 {L^dagger L, rho} )
+        for L in c_ops_t:
+            L_dag = L.conj().T
+            L_dag_L = L_dag @ L
+            drho += L @ rho_t @ L_dag - 0.5 * (L_dag_L @ rho_t + rho_t @ L_dag_L)
+
+        return drho.flatten()
+
+    sol = solve_ivp(
+        rhs,
+        (tlist[0], tlist[-1]),
+        y0,
+        t_eval=tlist,
+        method="DOP853",
+        rtol=rtol,
+        atol=atol,
+    )
+
+    if not sol.success:
+        raise RuntimeError(f"Lindblad ODE integration failed: {sol.message}")
+
+    n_t = len(tlist)
+    states = []
+    p00 = np.zeros(n_t, dtype=float)
+    p01 = np.zeros(n_t, dtype=float)
+    p10 = np.zeros(n_t, dtype=float)
+    p11 = np.zeros(n_t, dtype=float)
+    coherence_01_10 = np.zeros(n_t, dtype=complex)
+    abs_coherence = np.zeros(n_t, dtype=float)
+    imbalance_z = np.zeros(n_t, dtype=float)
+    s_odd = np.zeros(n_t, dtype=float)
+
+    for idx in range(n_t):
+        rho_mat = sol.y[:, idx].reshape((4, 4))
+        # Enforce exact Hermiticity
+        rho_mat = 0.5 * (rho_mat + rho_mat.conj().T)
+        q_rho = Qobj(rho_mat, dims=[[2, 2], [2, 2]])
+        states.append(q_rho)
+
+        p00[idx] = float(np.real(rho_mat[0, 0]))
+        p01[idx] = float(np.real(rho_mat[1, 1]))
+        p10[idx] = float(np.real(rho_mat[2, 2]))
+        p11[idx] = float(np.real(rho_mat[3, 3]))
+
+        odd_sum = p01[idx] + p10[idx]
+        s_odd[idx] = odd_sum
+
+        coh = rho_mat[1, 2]
+        coherence_01_10[idx] = coh
+        abs_coherence[idx] = float(np.abs(coh))
+
+        if odd_sum > 1e-15:
+            imbalance_z[idx] = (p01[idx] - p10[idx]) / odd_sum
+        else:
+            imbalance_z[idx] = 0.0
+
+    return {
+        "tlist": tlist,
+        "states": states,
+        "p00": p00,
+        "p01": p01,
+        "p10": p10,
+        "p11": p11,
+        "s_odd": s_odd,
+        "coherence_01_10": coherence_01_10,
+        "abs_coherence": abs_coherence,
+        "imbalance_z": imbalance_z,
+    }

@@ -30,6 +30,7 @@ from bipartit_open_spin.dynamics.simulation import (
     simulate_dynamics,
     simulate_no_jump_dynamics,
     simulate_quantum_trajectories,
+    simulate_timedependent_lindblad,
     simulate_timedependent_nonhermitian,
 )
 from bipartit_open_spin.analysis.entanglement import (
@@ -87,6 +88,7 @@ __all__ = [
     "simulate_no_jump_dynamics",
     "simulate_quantum_trajectories",
     "simulate_timedependent_nonhermitian",
+    "simulate_timedependent_lindblad",
     "concurrence",
     "negativity",
     "concurrence_trajectory",
