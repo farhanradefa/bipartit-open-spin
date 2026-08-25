@@ -195,3 +195,190 @@ def detect_exceptional_point(
         "eigenvector_cond": evec_cond,
         "rank_defect": rank_defect,
     }
+
+
+def build_topological_odd_hamiltonian(J: float, delta_gamma: float) -> np.ndarray:
+    """Construct the centered, traceless 2x2 topological Hamiltonian H_top.
+
+    H_top = J * sigma_x - i * (delta_gamma / 4) * sigma_z
+          = [[-i * delta_gamma / 4, J],
+             [J,                   +i * delta_gamma / 4]]
+
+    Args:
+        J: Coherent coupling strength.
+        delta_gamma: Dissipation asymmetry (gamma1 - gamma2).
+
+    Returns:
+        2x2 complex ndarray.
+    """
+    return np.array([
+        [-0.25j * delta_gamma, J],
+        [J, 0.25j * delta_gamma],
+    ], dtype=complex)
+
+
+def compute_biorthogonal_eigenpairs(H: np.ndarray) -> dict:
+    """Compute right and left eigenvectors with biorthogonal normalization.
+
+    H |R_n> = lambda_n |R_n>
+    <L_n| H = lambda_n <L_n|  <=>  H^dagger |L_n> = lambda_n^* |L_n>
+
+    Biorthogonal normalization:
+        <L_m | R_n> = delta_mn
+
+    Args:
+        H: 2x2 or NxN complex ndarray.
+
+    Returns:
+        dict containing:
+            'eigenvalues': 1D array of eigenvalues
+            'right_eigenvectors': NxN array of right eigenvectors (columns)
+            'left_eigenvectors': NxN array of left eigenvectors (columns)
+            'petermann_factors': 1D array of Petermann factors K_n = <L_n|L_n> <R_n|R_n>
+    """
+    H = np.asarray(H, dtype=complex)
+    n = H.shape[0]
+
+    # Right eigenvectors
+    evals_R, R = np.linalg.eig(H)
+    # Left eigenvectors via H^dagger
+    evals_L, L = np.linalg.eig(H.conj().T)
+
+    # Sort and match left eigenvectors to right eigenvalues
+    matched_L = np.zeros_like(L)
+    for i, lam_R in enumerate(evals_R):
+        match_idx = np.argmin(np.abs(evals_L.conj() - lam_R))
+        matched_L[:, i] = L[:, match_idx]
+
+    # Normalize right eigenvectors to unit 2-norm
+    for i in range(n):
+        norm_r = np.linalg.norm(R[:, i])
+        if norm_r > 1e-15:
+            R[:, i] = R[:, i] / norm_r
+
+    # Biorthogonal scaling for left eigenvectors: <L_i|R_i> = 1
+    petermann_factors = np.zeros(n, dtype=float)
+    for i in range(n):
+        overlap = np.vdot(matched_L[:, i], R[:, i])
+        if np.abs(overlap) > 1e-12:
+            matched_L[:, i] = matched_L[:, i] / overlap.conj()
+            # Petermann factor K = ||L_i||^2 ||R_i||^2 / |<L_i|R_i>|^2
+            petermann_factors[i] = float(
+                np.linalg.norm(matched_L[:, i]) ** 2 * np.linalg.norm(R[:, i]) ** 2
+            )
+        else:
+            petermann_factors[i] = float("inf")
+
+    return {
+        "eigenvalues": evals_R,
+        "right_eigenvectors": R,
+        "left_eigenvectors": matched_L,
+        "petermann_factors": petermann_factors,
+    }
+
+
+def track_eigenpairs_along_loop(
+    hamiltonian_func,
+    theta_grid: np.ndarray,
+) -> dict:
+    """Continuously track complex eigenvalues and eigenvectors along a closed parameter loop.
+
+    Implements continuous analytic branch continuation by minimizing step-to-step
+    Euclidean distance between eigenvalues, and aligns eigenvector global phases.
+
+    Args:
+        hamiltonian_func: Callable theta -> 2x2 complex ndarray or list/array of 2x2 matrices.
+        theta_grid: 1D array of parameter angles (e.g. from 0 to 2*pi or 4*pi).
+
+    Returns:
+        dict containing:
+            'theta_grid': 1D ndarray of theta values
+            'eigenvalues': (N_theta, 2) complex ndarray of tracked eigenvalue branches
+            'eigenvectors': (N_theta, 2, 2) complex ndarray of tracked right eigenvectors
+            'overlaps': dict with O11, O12, O21, O22 overlaps vs initial state
+            'permutation_1_loop': bool (True if branch 1 and branch 2 swapped after theta=2*pi)
+            'permutation_error_1_loop': float, |lambda_1(2pi) - lambda_2(0)|
+            'return_error_2_loop': float, |lambda_1(4pi) - lambda_1(0)| (if theta_max >= 4*pi)
+    """
+    n_theta = len(theta_grid)
+    tracked_evals = np.zeros((n_theta, 2), dtype=complex)
+    tracked_evecs = np.zeros((n_theta, 2, 2), dtype=complex)
+
+    for k, theta in enumerate(theta_grid):
+        if callable(hamiltonian_func):
+            H_k = hamiltonian_func(theta)
+        else:
+            H_k = hamiltonian_func[k]
+
+        evals_k, evecs_k = np.linalg.eig(H_k)
+
+        # Normalize eigenvectors
+        for i in range(2):
+            norm_v = np.linalg.norm(evecs_k[:, i])
+            if norm_v > 1e-15:
+                evecs_k[:, i] = evecs_k[:, i] / norm_v
+
+        if k == 0:
+            # Initial sort by real part
+            sort_idx = np.argsort(evals_k.real)
+            tracked_evals[0, :] = evals_k[sort_idx]
+            tracked_evecs[0, :, 0] = evecs_k[:, sort_idx[0]]
+            tracked_evecs[0, :, 1] = evecs_k[:, sort_idx[1]]
+        else:
+            prev_evals = tracked_evals[k - 1, :]
+            prev_evecs = tracked_evecs[k - 1, :, :]
+
+            # Permutation matching: compare direct assignment (0->0, 1->1) vs swap (0->1, 1->0)
+            d_direct = np.abs(evals_k[0] - prev_evals[0]) ** 2 + np.abs(evals_k[1] - prev_evals[1]) ** 2
+            d_swap = np.abs(evals_k[1] - prev_evals[0]) ** 2 + np.abs(evals_k[0] - prev_evals[1]) ** 2
+
+            if d_swap < d_direct:
+                current_evals = np.array([evals_k[1], evals_k[0]])
+                current_evecs = np.column_stack((evecs_k[:, 1], evecs_k[:, 0]))
+            else:
+                current_evals = np.array([evals_k[0], evals_k[1]])
+                current_evecs = np.column_stack((evecs_k[:, 0], evecs_k[:, 1]))
+
+            # Phase alignment with previous step: v(k) -> exp(-i*arg(<v(k-1)|v(k)>)) * v(k)
+            for i in range(2):
+                inner_prod = np.vdot(prev_evecs[:, i], current_evecs[:, i])
+                if np.abs(inner_prod) > 1e-15:
+                    phase = np.angle(inner_prod)
+                    current_evecs[:, i] = current_evecs[:, i] * np.exp(-1j * phase)
+
+            tracked_evals[k, :] = current_evals
+            tracked_evecs[k, :, :] = current_evecs
+
+    # Overlaps with initial state |v_1(0)> and |v_2(0)>
+    v1_0 = tracked_evecs[0, :, 0]
+    v2_0 = tracked_evecs[0, :, 1]
+
+    o11 = np.array([np.abs(np.vdot(v1_0, tracked_evecs[k, :, 0])) for k in range(n_theta)])
+    o12 = np.array([np.abs(np.vdot(v1_0, tracked_evecs[k, :, 1])) for k in range(n_theta)])
+    o21 = np.array([np.abs(np.vdot(v2_0, tracked_evecs[k, :, 0])) for k in range(n_theta)])
+    o22 = np.array([np.abs(np.vdot(v2_0, tracked_evecs[k, :, 1])) for k in range(n_theta)])
+
+    # Check 1-loop index (closest to 2*pi)
+    idx_2pi = np.argmin(np.abs(theta_grid - 2.0 * np.pi))
+    d_no_swap = np.abs(tracked_evals[idx_2pi, 0] - tracked_evals[0, 0])
+    d_swap = np.abs(tracked_evals[idx_2pi, 0] - tracked_evals[0, 1])
+    perm_1_loop = bool(d_swap < d_no_swap)
+
+    # Check 2-loop index (closest to 4*pi if present)
+    idx_4pi = np.argmin(np.abs(theta_grid - 4.0 * np.pi))
+    return_err_2_loop = float(np.abs(tracked_evals[idx_4pi, 0] - tracked_evals[0, 0]))
+
+    return {
+        "theta_grid": theta_grid,
+        "eigenvalues": tracked_evals,
+        "eigenvectors": tracked_evecs,
+        "overlaps": {
+            "O11": o11,
+            "O12": o12,
+            "O21": o21,
+            "O22": o22,
+        },
+        "permutation_1_loop": perm_1_loop,
+        "permutation_error_1_loop": float(d_swap),
+        "return_error_2_loop": return_err_2_loop,
+    }

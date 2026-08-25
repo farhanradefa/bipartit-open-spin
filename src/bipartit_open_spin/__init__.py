@@ -40,9 +40,12 @@ from bipartit_open_spin.analysis.entanglement import (
 )
 from bipartit_open_spin.analysis.spectrum import (
     analytical_eigenvalues,
+    build_topological_odd_hamiltonian,
+    compute_biorthogonal_eigenpairs,
     compute_complex_spectrum,
     detect_exceptional_point,
     parity_block_decomposition,
+    track_eigenpairs_along_loop,
 )
 from bipartit_open_spin.validation.diagnostics import (
     check_hermiticity,
@@ -90,6 +93,9 @@ __all__ = [
     "analytical_eigenvalues",
     "compute_complex_spectrum",
     "detect_exceptional_point",
+    "build_topological_odd_hamiltonian",
+    "compute_biorthogonal_eigenpairs",
+    "track_eigenpairs_along_loop",
     "check_trace_preservation",
     "check_hermiticity",
     "check_positivity",
