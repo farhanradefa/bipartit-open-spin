@@ -5,7 +5,7 @@
 [![Tests](https://img.shields.io/badge/unit%20tests-64%20passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
 
-A comprehensive computational and analytical research framework investigating the nonequilibrium physics of two interacting spin-$1/2$ qubits across closed unitary, open dissipative, and effective non-Hermitian dynamical regimes. The repository implements exact Lindblad master-equation solvers, stochastic Monte-Carlo quantum trajectories, non-Hermitian spectral topology mapping, and dynamic parameter-space encircling of second-order exceptional points ($\mathrm{EP2}$).
+A comprehensive computational and analytical research framework investigating the nonequilibrium physics of two interacting spin - $1/2$ qubits across closed unitary, open dissipative, and effective non-Hermitian dynamical regimes. The repository implements exact Lindblad master-equation solvers, stochastic Monte-Carlo quantum trajectories, non-Hermitian spectral topology mapping, and dynamic parameter-space encircling of second-order exceptional points ($\mathrm{EP2}$).
 
 ---
 
@@ -42,131 +42,8 @@ This repository systematically charts this physical hierarchy from foundational 
 
 ---
 
-## 2. Physical Model
 
-The system consists of two coupled two-level systems (qubits/spins) governed by the transverse Ising Hamiltonian:
-
-$$
-H
-=
-\frac{\omega}{2}
-\left(
-\sigma_z^{(1)}
-+
-\sigma_z^{(2)}
-\right)
-+
-J \sigma_x^{(1)}\sigma_x^{(2)}
-$$
-
-where:
-- $\omega$: Local energy splitting (qubit transition frequency).
-- $J$: Coherent transverse coupling strength.
-- $\sigma_{x,y,z}^{(i)}$: Standard Pauli operators acting on qubit $i \in \{1, 2\}$.
-
-### Computational Basis & Parity Symmetry
-The 4-dimensional Hilbert space $\mathcal{H} = \mathbb{C}^2 \otimes \mathbb{C}^2$ is spanned by the ordered computational basis:
-- $|00\rangle \equiv |\uparrow\uparrow\rangle$ (index 0, double excited state)
-- $|01\rangle \equiv |\uparrow\downarrow\rangle$ (index 1, spin 1 excited, spin 2 ground)
-- $|10\rangle \equiv |\downarrow\uparrow\rangle$ (index 2, spin 1 ground, spin 2 excited)
-- $|11\rangle \equiv |\downarrow\downarrow\rangle$ (index 3, ground state)
-
-The Hamiltonian commutes with the total parity operator $\Pi = \sigma_z^{(1)}\sigma_z^{(2)}$ ($[H, \Pi] = 0$), decomposing $\mathcal{H}$ into two invariant $2 \times 2$ parity blocks:
-- **Even Parity Sector ($\Pi = +1$):** $\mathrm{span}\{|00\rangle, |11\rangle\}$
-- **Odd Parity Sector ($\Pi = -1$):** $\mathrm{span}\{|01\rangle, |10\rangle\}$
-
----
-
-## 3. Open Quantum System Framework
-
-Coupling to Markovian reservoirs is described by the Gorini-Kossakowski-Sudarshan-Lindblad (GKSL) master equation:
-
-$$
-\frac{d\rho}{dt}
-=
-\mathcal{L}[\rho]
-=
--i[H(t), \rho]
-+
-\sum_k \mathcal{D}[L_k(t)]\rho
-$$
-
-with the Lindblad dissipator:
-
-$$
-\mathcal{D}[L]\rho
-=
-L \rho L^\dagger
--
-\frac{1}{2}
-\left\{
-L^\dagger L,
-\rho
-\right\}
-$$
-
-### Dissipation & Noise Channels
-
-1. **Local Amplitude Damping (Spontaneous Emission):**
-   $$
-   L_1 = \sqrt{\gamma_1}\sigma_-^{(1)},\quad L_2 = \sqrt{\gamma_2}\sigma_-^{(2)}
-   $$
-   where $\sigma_- = |1\rangle\langle 0|$ is the lowering operator. In general asymmetric configurations, $\gamma_1 \neq \gamma_2$, with mean decay rate $\bar{\gamma} = (\gamma_1 + \gamma_2)/2$ and asymmetry $\Delta\gamma = \gamma_1 - \gamma_2$.
-
-2. **Local Pure Dephasing (Phase Noise):**
-   $$
-   L_{\phi,1} = \sqrt{\frac{\gamma_\phi}{2}}\sigma_z^{(1)},\quad L_{\phi,2} = \sqrt{\frac{\gamma_\phi}{2}}\sigma_z^{(2)}
-   $$
-
----
-
-## 4. Effective Non-Hermitian Framework
-
-The master equation can be partitioned into a conditional continuous drift and discrete stochastic quantum jumps:
-
-$$
-\frac{d\rho}{dt}
-=
--i
-\left(
-H_{\mathrm{eff}}\rho
--
-\rho H_{\mathrm{eff}}^\dagger
-\right)
-+
-\sum_k L_k \rho L_k^\dagger
-$$
-
-where the **effective non-Hermitian Hamiltonian** is defined as:
-
-$$
-H_{\mathrm{eff}}
-=
-H
--
-\frac{i}{2}
-\sum_k L_k^\dagger L_k
-$$
-
-### Key Physical Distinctions
-- **Full Lindblad Evolution:** Unconditional, trace-preserving ($\mathrm{Tr}(\rho)=1$) density matrix dynamics averaging over all quantum jump histories.
-- **Conditional No-Jump Dynamics:** Sub-ensemble evolution conditioned on detecting zero emission events:
-  $$
-  i\frac{d|\psi(t)\rangle}{dt}
-  =
-  H_{\mathrm{eff}}(t)|\psi(t)\rangle
-  $$
-  The norm decays as $\langle\psi(t)|\psi(t)\rangle = P_{\mathrm{no-jump}}(t) \le 1$. State normalization yields:
-  $$
-  |\tilde{\psi}(t)\rangle
-  =
-  \frac{|\psi(t)\rangle}{\sqrt{\langle\psi(t)|\psi(t)\rangle}}
-  $$
-- **Spectrum of $H_{\mathrm{eff}}$:** Complex eigenvalues $\lambda_n = E_n - i\Gamma_n/2$ determine coherent oscillation frequencies $E_n$ and state-dependent decay rates $\Gamma_n$.
-
----
-
-## 5. Experimental Roadmap
+## 2. Experimental Roadmap
 
 | Experiment | Scientific Objective | Physical Regime | Key Physical Result | Script |
 | :--- | :--- | :--- | :--- | :--- |
@@ -186,132 +63,8 @@ $$
 
 ---
 
-## 6. Experiment Summaries (01 to 06c)
 
-### Experiment 01 & 01b: Closed Unitary Entanglement Dynamics
-- **Exp 01:** Analyzed the closed-system evolution of an initial Bell state:
-  $$
-  |\Phi^+\rangle
-  =
-  \frac{|00\rangle + |11\rangle}{\sqrt{2}}
-  $$
-  Verified periodic revivals of Concurrence $C(t)$ and Negativity $N(t)$ with zero trace drift.
-- **Exp 01b:** Initialized the separable product state $|00\rangle$. The transverse coupling $J\sigma_x^{(1)}\sigma_x^{(2)}$ drives coherent population transfer into $|11\rangle$, dynamically generating maximal bipartite entanglement ($C=1.0$) at $t = \pi / (4J)$ when $\omega = 0$.
-
-### Experiment 02a–02c: Dissipative Dynamics & Entangled Steady States
-- **Exp 02a:** Evaluated uncoupled qubits under local amplitude damping ($\gamma_1 = \gamma_2 > 0, J = 0$). Entanglement decays exponentially:
-  $$
-  C(t)
-  =
-  C(0)e^{-2\gamma t}
-  $$
-  terminating at the unentangled ground state $|11\rangle$.
-- **Exp 02b:** Introduced coherent coupling $J$ in the presence of amplitude damping $\gamma$. Discovered an underdamped-to-overdamped dynamical transition governed by the ratio $J/\gamma$.
-- **Exp 02c:** Performed a systematic 2D parameter scan in the $(J/\omega, \gamma/\omega)$ space. Mapped the non-equilibrium steady state (NESS) and discovered an **entangled steady-state island** reaching $C_{\mathrm{ss}} \approx 0.309$ near $J \approx 0.6\,\omega, \gamma \approx 0.6\,\omega$.
-
-### Experiment 03a–03c: Dephasing Noise, Mechanisms, and Scaling
-- **Exp 03a:** Isolated pure dephasing ($L_{\phi} = \sqrt{\gamma_\phi/2}\sigma_z$). Proved that dephasing damps off-diagonal coherence elements without modifying diagonal populations, destroying asymptotic entanglement ($C_{\mathrm{ss}} = 0$).
-- **Exp 03b:** Investigated simultaneous amplitude damping and dephasing. Demonstrated that dephasing systematically shrinks the entangled NESS domain.
-- **Exp 03c:** Developed an analytical Liouvillian balance model. Using the X-state concurrence formula:
-  $$
-  C(\rho)
-  =
-  2\max
-  \left(
-  0,\;
-  |\rho_{01,10}| - \sqrt{\rho_{00,00}\rho_{11,11}},\;
-  |\rho_{00,11}| - \sqrt{\rho_{01,01}\rho_{10,10}}
-  \right)
-  $$
-  proved that amplitude damping enables NESS entanglement by depleting the double-excited population $\rho_{00,00}$, whereas dephasing directly suppresses the off-diagonal coherence $|\rho_{01,10}|$. Established universal collapse under the dimensionless scaling parameter $J/\gamma_1$.
-
-### Experiment 04: Quantum Trajectories and Effective Non-Hermitian Drift
-- Formulated the stochastic Schrödinger equation (Monte-Carlo unraveling).
-- Demonstrated that an ensemble of $N_{\mathrm{traj}} \ge 500$ stochastic trajectories quantitatively reconstructs the Lindblad density matrix $\rho(t)$ with statistical error scaling as $\mathcal{O}(1/\sqrt{N_{\mathrm{traj}}})$.
-- Quantified the conditional no-jump survival probability:
-  $$
-  P_{\mathrm{no-jump}}(t)
-  =
-  \exp
-  \left(
-  -\int_0^t \sum_k \langle L_k^\dagger L_k \rangle dt'
-  \right)
-  $$
-
-### Experiment 05: Spectral Non-Hermitian Physics and EP2 Discovery
-- Decomposed $H_{\mathrm{eff}}$ into independent $2 \times 2$ parity blocks.
-- **Symmetric Loss ($\gamma_1 = \gamma_2$):** Proved analytically that the symmetric model possesses strictly real eigenvalue differences and no exceptional points for $J > 0$.
-- **Asymmetric Loss ($\gamma_1 \neq \gamma_2$):** Discovered a second-order exceptional point ($\mathrm{EP2}$) in the odd-parity single-excitation subspace $\mathrm{span}\{|01\rangle, |10\rangle\}$:
-  $$
-  H_{\mathrm{eff}}^{\mathrm{odd}}
-  =
-  -i\frac{\gamma_1 + \gamma_2}{4}I
-  +
-  \begin{pmatrix}
-  -i\frac{\Delta\gamma}{4} & J \\
-  J & +i\frac{\Delta\gamma}{4}
-  \end{pmatrix}
-  $$
-  with instantaneous complex eigenvalues:
-  $$
-  \lambda_\pm
-  =
-  -i\frac{\gamma_1+\gamma_2}{4}
-  \pm
-  \sqrt{
-  J^2
-  -
-  \left(
-  \frac{\Delta\gamma}{4}
-  \right)^2
-  }
-  $$
-  The exact $\mathrm{EP2}$ condition is:
-  $$
-  J_{\mathrm{EP}}
-  =
-  \frac{|\gamma_1 - \gamma_2|}{4}
-  =
-  \frac{|\Delta\gamma|}{4}
-  $$
-
-### Experiment 06a: Static EP2 Topology and Riemann Surfaces
-- Evaluated parameter loops $\mathcal{C}(\theta) = (J(\theta), \Delta\gamma(\theta))$ in the complex eigenvalue manifold.
-- Confirmed the square-root branch point topology ($\sqrt{z}$):
-  - Encircling the EP once ($\Delta\theta = 2\pi$) cyclically permutes the eigenvalues: $\lambda_1 \leftrightarrow \lambda_2$.
-  - Encircling the EP twice ($\Delta\theta = 4\pi$) returns the system to the identity: $\lambda_j \to \lambda_j$.
-  - Non-encircling control loops exhibit zero eigenvalue permutation.
-
-### Experiment 06b: Dynamical EP Encircling and Chiral State Transfer
-- Integrated the time-dependent non-Hermitian Schrödinger equation $i\partial_t |\psi(t)\rangle = H_{\mathrm{eff}}^{\mathrm{odd}}(t)|\psi(t)\rangle$ along counter-clockwise (CCW) and clockwise (CW) parameter loops.
-- **Asymmetric Mode Amplification:** Demonstrated that non-Hermitian dynamical evolution breaks adiabatic symmetry. Rather than state permutation, dynamic encircling exhibits **chiral state funneling**:
-  - CCW encircling funnels **all** initial states into mode $+$ ($F_{+ \to +} = 1.0, F_{- \to +} = 1.0$).
-  - CW encircling funnels **all** initial states into mode $-$ ($F_{+ \to -} = 1.0, F_{- \to -} = 1.0$).
-- Discovered maximum population chirality $\chi_{\max} = 0.9598$ at period $T = 56.5\,\omega^{-1}$.
-
-### Experiment 06c: Robustness Under Full Open-System Dynamics
-- Integrated the complete 4-level time-dependent Lindblad master equation:
-  $$
-  \frac{d\rho}{dt}
-  =
-  -i[H(t), \rho]
-  +
-  \sum_k \mathcal{D}[L_k(t)]\rho
-  $$
-- Demonstrated that quantum jumps continuously transfer population from $\{|01\rangle, |10\rangle\}$ to the ground state $|11\rangle$.
-- Formulated the **survival-weighted chirality**:
-  $$
-  \chi_{\mathrm{eff}}(T)
-  =
-  \chi(T) \cdot S_{\mathrm{odd}}(T)
-  $$
-  where $S_{\mathrm{odd}}(T) = P_{01}(T) + P_{10}(T)$.
-- Discovered a well-defined physical optimal operating window ($8\,\omega^{-1} \le T \le 30\,\omega^{-1}$) peaking at **$T = 19.4\,\omega^{-1}$** with $\chi_{\mathrm{eff}} = 1.026 \times 10^{-3}$.
-- Proved that pure dephasing induces a smooth crossover suppression of odd-sector coherence $|\rho_{01,10}(T)|$.
-
----
-
-## 7. Key Physical Findings
+## 3. Key Physical Findings
 
 1. **Dissipative Entanglement Stabilization:** Amplitude damping does not merely destroy entanglement; when balanced against coherent exchange $J$, it continuously purges the separable double-excited component $\rho_{00,00}$, sustaining an entangled NESS ($C_{\mathrm{ss}} \approx 0.309$).
 2. **Dephasing-Induced Coherence Destruction:** Pure dephasing specifically attacks off-diagonal density matrix coherences without affecting state populations, extinguishing NESS entanglement via a smooth crossover.
@@ -321,7 +74,7 @@ $$
 
 ---
 
-## 8. Key Results (Figures)
+## 4. Key Results (Figures)
 
 ### Closed Dynamics & Entangled Steady States
 | Unitary Entanglement Generation (Exp 01b) | Steady-State Concurrence Phase Map (Exp 02c) |
@@ -344,7 +97,7 @@ $$
 
 ---
 
-## 9. Repository Structure
+## 5. Repository Structure
 
 ```
 bipartit-open-spin/
@@ -404,7 +157,7 @@ bipartit-open-spin/
 
 ---
 
-## 10. Installation & Setup
+## 6. Installation & Setup
 
 This repository uses [`uv`](https://github.com/astral-sh/uv) for fast, deterministic Python environment management.
 
@@ -440,7 +193,7 @@ This repository uses [`uv`](https://github.com/astral-sh/uv) for fast, determini
 
 ---
 
-## 11. Running Experiments
+## 7. Running Experiments
 
 All experiment scripts can be executed directly from the project root.
 
@@ -492,7 +245,7 @@ uv run python -m unittest discover -s tests -p "test_*.py" -v
 
 ---
 
-## 13. Research Architecture
+## 8. Research Architecture
 
 The logical progression of the research framework is organized as follows:
 
@@ -514,7 +267,7 @@ Dynamical EP Encircling and Chiral Transfer
 
 ---
 
-## 14. Future Directions
+## 9. Future Directions
 
 The following topics represent prospective avenues for extending this research:
 
