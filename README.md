@@ -5,7 +5,7 @@
 [![Tests](https://img.shields.io/badge/unit%20tests-64%20passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
 
-A comprehensive computational and analytical research framework investigating the nonequilibrium physics of two interacting spin-$1/2$ qubits across closed unitary, open dissipative, and effective non-Hermitian dynamical regimes. The repository implements exact Lindblad master-equation solvers, stochastic Monte-Carlo quantum trajectories, non-Hermitian spectral topology mapping, and dynamic parameter-space encircling of second-order exceptional points (EP2).
+A comprehensive computational and analytical research framework investigating the nonequilibrium physics of two interacting spin- $1/2$ qubits across closed unitary, open dissipative, and effective non-Hermitian dynamical regimes. The repository implements exact Lindblad master-equation solvers, stochastic Monte-Carlo quantum trajectories, non-Hermitian spectral topology mapping, and dynamic parameter-space encircling of second-order exceptional points (EP2).
 
 ---
 
