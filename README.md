@@ -79,7 +79,15 @@ $$
 with the Lindblad dissipator:
 
 $$
-\mathcal{D}[L]\rho = L \rho L^\dagger - \frac{1}{2}\left\{ L^\dagger L, \rho \right\}
+\mathcal{D}[L]\rho
+=
+L \rho L^\dagger
+-
+\frac{1}{2}
+\left\{
+L^\dagger L,
+\rho
+\right\}
 $$
 
 ### Dissipation & Noise Channels
