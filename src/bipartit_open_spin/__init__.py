@@ -38,6 +38,12 @@ from bipartit_open_spin.analysis.entanglement import (
     negativity_trajectory,
     x_state_concurrence_decomposition,
 )
+from bipartit_open_spin.analysis.spectrum import (
+    analytical_eigenvalues,
+    compute_complex_spectrum,
+    detect_exceptional_point,
+    parity_block_decomposition,
+)
 from bipartit_open_spin.validation.diagnostics import (
     check_hermiticity,
     check_positivity,
@@ -80,6 +86,10 @@ __all__ = [
     "concurrence_trajectory",
     "negativity_trajectory",
     "x_state_concurrence_decomposition",
+    "parity_block_decomposition",
+    "analytical_eigenvalues",
+    "compute_complex_spectrum",
+    "detect_exceptional_point",
     "check_trace_preservation",
     "check_hermiticity",
     "check_positivity",
